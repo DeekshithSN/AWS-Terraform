@@ -1,3 +1,5 @@
+#!/bin/sh
+
 yum install httpd -y 
 
 systemctl enable httpd 
@@ -10,9 +12,9 @@ tee /var/www/html/redapp/index.html <<EOF
    <head>
       <title>HTML Backgorund Color</title>
    </head>
-   <body style="background-color:grey;">
-      <h1>Products</h1>
-      <p>We have developed more than 10 products till now.</p>
+   <body style="background-color:red;">
+      <h1>Machine 1</h1>
+      <p>Red app</p>
    </body>
 </html>
 EOF
