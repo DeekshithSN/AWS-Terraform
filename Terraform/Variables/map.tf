@@ -21,4 +21,4 @@ variable "project_environment" {
     environment = "dev"
   }
 }
-BASH
+
