@@ -14,6 +14,6 @@ resource "aws_instance" "ec2_example" {
     }
 
   provisioner "local-exec" {
-    command = "touch hello-jhooq.txt"
+    command = "touch hello.txt"
   }
 }
