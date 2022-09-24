@@ -6,10 +6,6 @@ data "aws_ami" "app_ami" {
     values = ["ebs"]
   }
   
-   filter {
-    name   = "architecture"
-    values = ["arm64"]
-  }
   
    filter {
     name   = "name"
