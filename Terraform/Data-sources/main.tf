@@ -17,4 +17,8 @@ data "aws_ami" "app_ami" {
 resource "aws_instance" "app" {
   ami           = "${data.aws_ami.app_ami.id}"
   instance_type = "t2.micro"
+  tags = {
+    Name = "terraform-data-providers"
+    Env = "Dev"
+   }
 }
