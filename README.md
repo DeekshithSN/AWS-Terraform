@@ -1,6 +1,5 @@
 # AWS-Terraform
 
-
 # Terraform advanced commands 
 
 1. ``` terraform apply -target=aws_instance.app ```
