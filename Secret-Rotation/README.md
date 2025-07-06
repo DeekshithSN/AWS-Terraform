@@ -54,3 +54,9 @@ other useful commands
 aws secretsmanager get-secret-value --secret-id <secret-arn> --version-id <version-d> --query SecretString --output text
 ```
 
+Testing gitlab Pat token
+```
+curl --header "PRIVATE-TOKEN: <YOUR_PAT>" \
+  "https://gitlab.com/api/v4/projects?owned=true&per_page=100" \
+  | jq -r '.[].name'
+```
