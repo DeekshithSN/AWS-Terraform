@@ -42,6 +42,13 @@ pip install pymysql -t python
 zip -r9 lambda-layer.zip .\python
 ```
 
+```
+mkdir -p lambda-layer/python
+cd lambda-layer/python
+pip3 install --platform manylinux2014_x86_64 --target . --python-version 3.9 --only-binary=:all: python-gitlab
+zip -r layer.zip python
+```
+
 other useful commands
 ```
 aws secretsmanager get-secret-value --secret-id <secret-arn> --version-id <version-d> --query SecretString --output text
