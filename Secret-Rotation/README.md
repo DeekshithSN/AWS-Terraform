@@ -20,6 +20,20 @@ INSERT INTO jira_tickets (ticket_key, summary, status, created_at) VALUES ('PROJ
 
 select * from jira_tickets;
 ```
+Policies that need to attch it to lambda function 
+
+```
+AmazonRDSFullAccess
+AWSLambdaVPCAccessExecutionRole
+CloudWatchFullAccess
+SecretsManagerReadWrite
+```
+
+Important steps to launch lambda in in VPC and connect to RDS
+
+```
+Create NAT (Attach it public subnet) --> create private subnet --> create route table ( add NAT gateway into route table ) --> associate rt to private subnet --> use this in Lambda  
+```
 
 Commands to create, lambda layer
 
