@@ -8,6 +8,9 @@ def lambda_handler(event, context):
     token = event['ClientRequestToken']
     step = event['Step']
 
+    print(step)
+    print(token)
+
     # Setup the client
     service_client = boto3.client('secretsmanager')
 
@@ -33,8 +36,6 @@ def lambda_handler(event, context):
 
 
 def create_secret(service_client, arn, token):
-
-    service_client.get_secret_value(SecretId=arn, VersionStage="AWSCURRENT")
 
     # Now try to get the secret version, if that fails, put a new secret
     try:
