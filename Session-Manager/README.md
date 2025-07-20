@@ -36,3 +36,12 @@ Command to connect to ec2 via ssm
 ```
 aws ssm start-session --target <instance-id>
 ```
+
+In ubuntu ssm agent would have not installed 
+```
+#!/bin/bash
+sudo apt-get update
+sudo snap install amazon-ssm-agent --classic
+sudo systemctl start amazon-ssm-agent
+sudo systemctl enable amazon-ssm-agent
+```
