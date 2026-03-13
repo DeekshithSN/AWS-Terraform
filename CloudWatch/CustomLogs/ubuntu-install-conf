@@ -1,0 +1,75 @@
+# Run as root or with sudo
+set -euo pipefail
+
+# 1) detect arch and download the correct package
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+  URL="https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb"
+elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+  URL="https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb"
+else
+  echo "Unsupported arch: $ARCH"
+  exit 1
+fi
+
+echo "Detected arch: $ARCH"
+echo "Downloading CloudWatch Agent from $URL"
+apt-get update -y
+apt-get install -y curl unzip || true
+
+curl -fsSL -o /tmp/amazon-cloudwatch-agent.deb "$URL"
+
+# 2) install package (use -E to preserve env; dpkg may need dependencies)
+dpkg -i /tmp/amazon-cloudwatch-agent.deb || apt-get -y -f install
+
+# 3) verify binary
+if [ ! -x /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl ]; then
+  echo "CloudWatch Agent binary not found after install; listing /opt/aws/amazon-cloudwatch-agent:"
+  ls -la /opt/aws/amazon-cloudwatch-agent || true
+  exit 1
+fi
+
+# 4) create config directory if missing
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+echo "Config directory ensured: /opt/aws/amazon-cloudwatch-agent/etc"
+
+# (Optional) If you already created a config file, skip this next write.
+# Below we write a minimal example config that collects CPU+mem and tail nginx access log.
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'EOF'
+{
+  "agent": { "metrics_collection_interval": 60, "region": "ap-south-1" },
+  "metrics": {
+    "append_dimensions": { "InstanceId": "${aws:InstanceId}" },
+    "metrics_collected": {
+      "cpu": { "measurement": ["cpu_usage_idle","cpu_usage_user","cpu_usage_system"], "metrics_collection_interval": 60, "totalcpu": true },
+      "mem": { "measurement": ["mem_used_percent"], "metrics_collection_interval": 60 }
+    }
+  },
+  "logs": {
+    "logs_collected": { "files": { "collect_list": [
+      { "file_path": "/var/log/nginx/access.log", "log_group_name": "/nginx/access", "log_stream_name": "{instance_id}", "timezone": "UTC" }
+    ] } },
+    "force_flush_interval": 5
+  }
+}
+EOF
+
+# 5) load the config and start the agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s || {
+  echo "Failed to start agent with fetch-config; show journal and agent log for troubleshooting."
+  systemctl status amazon-cloudwatch-agent --no-pager || true
+  journalctl -u amazon-cloudwatch-agent --no-pager | tail -n 100 || true
+  tail -n 200 /var/log/amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log || true
+  exit 1
+}
+
+# 6) status + quick verification
+echo "CloudWatch Agent status (systemctl):"
+systemctl status amazon-cloudwatch-agent --no-pager
+
+echo
+echo "Recent agent log lines:"
+tail -n 200 /var/log/amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log || true
+
+echo
+echo "Done. If the agent failed to start, inspect the logs above for errors (permission, IAM, JSON parse)."
